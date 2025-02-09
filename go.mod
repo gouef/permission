@@ -1,3 +1,3 @@
-module github.com/gouef/github-lib-template
+module github.com/gouef/permission
 
 go 1.23.4
