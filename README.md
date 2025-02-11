@@ -1,7 +1,7 @@
 <img align=right width="168" src="docs/gouef_logo.png">
 
 # permission
-Permission GoLang library 
+This library provides an access control system for managing permissions between entities and resources.
 
 [![Static Badge](https://img.shields.io/badge/Github-gouef%2Fpermission-blue?style=for-the-badge&logo=github&link=github.com%2Fgouef%2Fpermission)](https://github.com/gouef/permission)
 
@@ -22,6 +22,9 @@ To install the `permission` package, use the following Go command:
 ```bash
 go get -u github.com/gouef/permission
 ```
+
+## Documentation
+There are [AccessControl](/docs/AccessControl.md), [Entity](/docs/Entity.md), [Permission](/docs/Permission.md) and [Resource](/docs/Resource.md)
 
 ## Contributing
 

@@ -2,6 +2,7 @@ package permission
 
 import "github.com/gouef/utils"
 
+// Entity represents a user, group, role (or what you want) with specific permissions.
 type Entity struct {
 	ID         string
 	Parents    []*Entity
@@ -9,6 +10,7 @@ type Entity struct {
 	Permission map[Permission]map[*Resource]bool
 }
 
+// NewEntity creates a new entity with default permission sets.
 func NewEntity(id string) *Entity {
 	perms := make(map[Permission]map[*Resource]bool)
 	perms[All] = make(map[*Resource]bool)
@@ -25,6 +27,7 @@ func NewEntity(id string) *Entity {
 	}
 }
 
+// CreateChild creates a child entity and assigns it as a descendant.
 func (e *Entity) CreateChild(id string) *Entity {
 	child := NewEntity(id)
 	e.AddChildren(child)
@@ -32,6 +35,7 @@ func (e *Entity) CreateChild(id string) *Entity {
 	return child
 }
 
+// AddChildren associates child entities with the current entity.
 func (e *Entity) AddChildren(children ...*Entity) {
 	e.Children = append(e.Children, children...)
 	for _, child := range children {
@@ -41,6 +45,7 @@ func (e *Entity) AddChildren(children ...*Entity) {
 	}
 }
 
+// AddParents associates parent entities with the current entity.
 func (e *Entity) AddParents(parents ...*Entity) {
 	e.Parents = append(e.Parents, parents...)
 	for _, parent := range parents {
@@ -50,26 +55,21 @@ func (e *Entity) AddParents(parents ...*Entity) {
 	}
 }
 
-func (e *Entity) parentExists(parent *Entity) bool {
-	return utils.InArray(parent, e.Parents)
-}
-
-func (e *Entity) childExists(child *Entity) bool {
-	return utils.InArray(child, e.Children)
-}
-
+// Allow grants specified permissions for a resource to the entity.
 func (e *Entity) Allow(resource *Resource, permissions ...Permission) {
 	for _, permission := range permissions {
 		e.AddPerm(permission, resource, true)
 	}
 }
 
+// Deny revokes specified permissions for a resource from the entity.
 func (e *Entity) Deny(resource *Resource, permissions ...Permission) {
 	for _, permission := range permissions {
 		e.AddPerm(permission, resource, false)
 	}
 }
 
+// AddPerm sets or removes a specific permission for a resource.
 func (e *Entity) AddPerm(permission Permission, resource *Resource, enabled bool) {
 	if _, ok := e.Permission[permission]; !ok {
 		e.Permission[permission] = make(map[*Resource]bool)
@@ -95,4 +95,12 @@ func (e *Entity) AddPermUpdate(resource *Resource, enabled bool) {
 
 func (e *Entity) AddPermDelete(resource *Resource, enabled bool) {
 	e.AddPerm(Delete, resource, enabled)
+}
+
+func (e *Entity) parentExists(parent *Entity) bool {
+	return utils.InArray(parent, e.Parents)
+}
+
+func (e *Entity) childExists(child *Entity) bool {
+	return utils.InArray(child, e.Children)
 }

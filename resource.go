@@ -1,5 +1,6 @@
 package permission
 
+// Resource represents an entity that can be assigned permissions.
 type Resource struct {
 	ID           string
 	Parent       *Resource
@@ -7,6 +8,7 @@ type Resource struct {
 	Owners       []*Entity            // Vlastníci resource
 }
 
+// NewResource initializes a new resource with the given ID.
 func NewResource(id string) *Resource {
 	return &Resource{
 		ID:           id,
@@ -15,6 +17,7 @@ func NewResource(id string) *Resource {
 	}
 }
 
+// CreateSub generates a new sub-resource under the current resource.
 func (r *Resource) CreateSub(id string) *Resource {
 	sub := NewResource(id)
 
@@ -23,10 +26,12 @@ func (r *Resource) CreateSub(id string) *Resource {
 	return sub
 }
 
+// GetSub retrieves a sub-resource by its ID.
 func (r *Resource) GetSub(id string) *Resource {
 	return r.SubResources[id]
 }
 
+// CreateSubs generates multiple sub-resources.
 func (r *Resource) CreateSubs(ids ...string) *Resource {
 	for _, id := range ids {
 		r.CreateSub(id)
@@ -34,6 +39,7 @@ func (r *Resource) CreateSubs(ids ...string) *Resource {
 	return r
 }
 
+// AddSubs links additional sub-resources to the current resource.
 func (r *Resource) AddSubs(resources ...*Resource) *Resource {
 	for _, resource := range resources {
 		resource.Parent = r
@@ -43,6 +49,7 @@ func (r *Resource) AddSubs(resources ...*Resource) *Resource {
 	return r
 }
 
+// AddOwners assigns ownership of the resource to specific entities.
 func (r *Resource) AddOwners(owners ...*Entity) *Resource {
 	r.Owners = append(r.Owners, owners...)
 	return r
