@@ -1,7 +1,7 @@
 <img align=right width="168" src="docs/gouef_logo.png">
 
 # permission
-Github template for new libraries
+Permission GoLang library 
 
 [![Static Badge](https://img.shields.io/badge/Github-gouef%2Fpermission-blue?style=for-the-badge&logo=github&link=github.com%2Fgouef%2Fpermission)](https://github.com/gouef/permission)
 
@@ -15,15 +15,13 @@ Github template for new libraries
 ![GitHub Release](https://img.shields.io/github/v/release/gouef/permission?label=RC&include_prereleases&filter=*rc*&logoSize=diago)
 ![GitHub Release](https://img.shields.io/github/v/release/gouef/permission?label=Beta&include_prereleases&filter=*beta*&logoSize=diago)
 
+## Installation
 
-## Introduction
+To install the `permission` package, use the following Go command:
 
-This is template repository for new libraries
-
-## Important
-
-- Edit go.mod and rename to your package module
-- Uncomment .github/workflows/tests.yml
+```bash
+go get -u github.com/gouef/permission
+```
 
 ## Contributing
 
