@@ -9,11 +9,8 @@ import (
 func TestPermissions(t *testing.T) {
 
 	t.Run("Test 1", func(t *testing.T) {
-
-		// Inicializace AccessControl
 		ac := permission.NewAccessControl()
 
-		// Vytvoření resource
 		webResource := permission.NewResource("Web").AddSubs(
 			permission.NewResource("comments").AddSubs(
 				permission.NewResource("comment1"),
@@ -21,30 +18,23 @@ func TestPermissions(t *testing.T) {
 			),
 		)
 
-		// Vytvoření entity (uživatelé a skupiny)
 		user1 := permission.NewEntity("user1")
 		user2 := permission.NewEntity("user2")
 		group1 := permission.NewEntity("group1")
 
-		// Přiřazení oprávnění pro skupinu
 		group1.AddPermRead(webResource, true)
 		group1.AddPermCreate(webResource, true)
 
-		// Přiřazení oprávnění pro uživatele
 		user1.AddPermRead(webResource, true)
 		user1.AddPermCreate(webResource, false)
 		user2.AddPermRead(webResource, false)
 
-		// Přiřazení uživatelů do skupiny
 		group1.AddChildren(user1, user2)
 		user1.AddParents(group1)
 		user2.AddParents(group1)
 
-		// Přiřazení resource do AccessControl
 		ac.AddResources(webResource)
 		ac.AddEntities(group1, user1, user2)
-
-		// Testování oprávnění
 
 		assert.False(t, ac.CanCreate(user1, webResource), "Can user1 create Web?")
 		assert.True(t, ac.CanRead(user1, webResource), "Can user1 read Web?")
@@ -62,6 +52,23 @@ func TestPermissions(t *testing.T) {
 		assert.False(t, ac.CanRead(user, res))
 		assert.False(t, ac.CanUpdate(user, res))
 		assert.False(t, ac.CanDelete(user, res))
+	})
+
+	t.Run("Custom Permission", func(t *testing.T) {
+		ac := permission.NewAccessControl()
+
+		res := ac.CreateResource("news")
+		user := ac.CreateEntity("user")
+
+		var VotePerm permission.Permission = "vote"
+
+		user.Allow(res, VotePerm)
+
+		assert.False(t, ac.CanCreate(user, res))
+		assert.False(t, ac.CanRead(user, res))
+		assert.False(t, ac.CanUpdate(user, res))
+		assert.False(t, ac.CanDelete(user, res))
+		assert.True(t, ac.Can(user, res, VotePerm))
 	})
 
 	t.Run("Simple Test All", func(t *testing.T) {

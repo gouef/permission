@@ -71,6 +71,9 @@ func (e *Entity) Deny(resource *Resource, permissions ...Permission) {
 }
 
 func (e *Entity) AddPerm(permission Permission, resource *Resource, enabled bool) {
+	if _, ok := e.Permission[permission]; !ok {
+		e.Permission[permission] = make(map[*Resource]bool)
+	}
 	e.Permission[permission][resource] = enabled
 }
 

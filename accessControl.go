@@ -53,37 +53,31 @@ func (ac *AccessControl) AddResources(resources ...*Resource) {
 	ac.Resources = append(ac.Resources, resources...)
 }
 
-// Ověření oprávnění entity na konkrétní resource
 func (ac *AccessControl) HasPermission(entity *Entity, resource *Resource, permission Permission) bool {
-
 	for _, owner := range resource.Owners {
 		if owner == entity {
 			return true
 		}
 	}
 
-	// 1. Pokud má entita explicitně dané oprávnění, použijeme ho
 	if perms, exists := entity.Permission[permission]; exists {
 		if val, ok := perms[resource]; ok {
 			return val
 		}
 	}
 
-	// 2. Pokud má `ALL` oprávnění, vracíme true
 	if perms, exists := entity.Permission[All]; exists {
 		if val, ok := perms[resource]; ok && val {
 			return true
 		}
 	}
 
-	// 3. Procházíme všechny rodičovské entity (skupiny, nadřazené skupiny)
 	for _, parent := range entity.Parents {
 		if ac.HasPermission(parent, resource, permission) {
 			return true
 		}
 	}
 
-	// Kontrola parents od resource
 	if resource.Parent != nil {
 		if ac.HasPermission(entity, resource.Parent, permission) {
 			return true
@@ -93,18 +87,22 @@ func (ac *AccessControl) HasPermission(entity *Entity, resource *Resource, permi
 	return false
 }
 
+func (ac *AccessControl) Can(entity *Entity, resource *Resource, permission Permission) bool {
+	return ac.HasPermission(entity, resource, permission)
+}
+
 func (ac *AccessControl) CanCreate(entity *Entity, resource *Resource) bool {
-	return ac.HasPermission(entity, resource, Create)
+	return ac.Can(entity, resource, Create)
 }
 
 func (ac *AccessControl) CanRead(entity *Entity, resource *Resource) bool {
-	return ac.HasPermission(entity, resource, Read)
+	return ac.Can(entity, resource, Read)
 }
 
 func (ac *AccessControl) CanUpdate(entity *Entity, resource *Resource) bool {
-	return ac.HasPermission(entity, resource, Update)
+	return ac.Can(entity, resource, Update)
 }
 
 func (ac *AccessControl) CanDelete(entity *Entity, resource *Resource) bool {
-	return ac.HasPermission(entity, resource, Delete)
+	return ac.Can(entity, resource, Delete)
 }
