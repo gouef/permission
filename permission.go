@@ -9,12 +9,3 @@ const (
 	Delete Permission = "DELETE"
 	All    Permission = "ALL"
 )
-
-type SectionPermissions struct {
-	Permissions map[Permission]bool
-}
-
-type Section struct {
-	Name        string
-	Permissions *SectionPermissions
-}

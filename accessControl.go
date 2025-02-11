@@ -1,122 +1,91 @@
 package permission
 
-import "fmt"
-
-// AccessControl manage permissions, users, groups and section
 type AccessControl struct {
-	users    map[string]*User
-	groups   map[string]*Group
-	sections map[string]*Section // Sekce v systému
+	Entities  []*Entity
+	Resources []*Resource
 }
 
-func (ac *AccessControl) CreateSection(name string, perms map[Permission]bool) *Section {
-	section := &Section{
-		Name: name,
-		Permissions: &SectionPermissions{
-			Permissions: perms,
-		},
-	}
-	ac.AddSection(section)
-	return section
-}
-
-func (ac *AccessControl) CreateGroup(name string, sections map[string]map[Permission]bool) *Group {
-	group := &Group{
-		Name:     name,
-		Sections: make(map[string]*SectionPermissions),
-	}
-
-	for secName, perms := range sections {
-		group.Sections[secName] = &SectionPermissions{Permissions: perms}
-	}
-
-	ac.AddGroup(group)
-	return group
-}
-
-func (ac *AccessControl) CreateUser(name string, groups []*Group, personalPerm map[string]map[Permission]bool, ownerOf map[string]bool) *User {
-	user := &User{
-		Name:         name,
-		Groups:       groups,
-		PersonalPerm: make(map[string]*SectionPermissions),
-		OwnerOf:      ownerOf,
-	}
-
-	for secName, perms := range personalPerm {
-		user.PersonalPerm[secName] = &SectionPermissions{Permissions: perms}
-	}
-
-	ac.AddUser(user)
-	return user
-}
-
-func (ac *AccessControl) AddUser(user *User) {
-	if ac.users == nil {
-		ac.users = make(map[string]*User)
-	}
-	ac.users[user.Name] = user
-}
-
-func (ac *AccessControl) AddGroup(group *Group) {
-	if ac.groups == nil {
-		ac.groups = make(map[string]*Group)
-	}
-	ac.groups[group.Name] = group
-}
-
-func (ac *AccessControl) AddSection(section *Section) {
-	if ac.sections == nil {
-		ac.sections = make(map[string]*Section)
-	}
-	ac.sections[section.Name] = section
-}
-
-func (ac *AccessControl) AddUserToGroup(userName, groupName string) {
-	user, userExists := ac.users[userName]
-	group, groupExists := ac.groups[groupName]
-
-	if userExists && groupExists {
-		user.Groups = append(user.Groups, group)
+func NewAccessControl() *AccessControl {
+	return &AccessControl{
+		Entities:  []*Entity{},
+		Resources: []*Resource{},
 	}
 }
 
-func (ac *AccessControl) SetUserPermissions(userName, sectionName string, perms map[Permission]bool) {
-	user, exists := ac.users[userName]
-	if !exists {
-		fmt.Println("User not found")
-		return
-	}
+func (ac *AccessControl) CreateResource(id string) *Resource {
+	resource := NewResource(id)
+	ac.AddResource(resource)
 
-	if user.PersonalPerm == nil {
-		user.PersonalPerm = make(map[string]*SectionPermissions)
-	}
-
-	user.PersonalPerm[sectionName] = &SectionPermissions{
-		Permissions: perms,
-	}
-
-	fmt.Printf("Permissions for user %s in section %s updated.\n", userName, sectionName)
+	return resource
 }
 
-func (ac *AccessControl) Can(userName, section string, permission Permission) bool {
-	user, exists := ac.users[userName]
-	if !exists {
-		fmt.Println("User not found")
-		return false
-	}
+func (ac *AccessControl) AddResource(resource *Resource) *AccessControl {
+	ac.Resources = append(ac.Resources, resource)
+	return ac
+}
 
-	if user.HasPermission(section, permission, ac) {
-		return true
-	}
+func (ac *AccessControl) CreateEntity(id string) *Entity {
+	entity := NewEntity(id)
+	ac.AddEntity(entity)
+	return entity
+}
 
-	for _, group := range user.Groups {
-		if group.HasPermission(section, permission, ac) {
+func (ac *AccessControl) AddEntity(entity *Entity) *AccessControl {
+	ac.Entities = append(ac.Entities, entity)
+	return ac
+}
+
+func (ac *AccessControl) Allow(entity *Entity, resource *Resource, permission Permission) *AccessControl {
+	entity.AddPerm(permission, resource, true)
+	return ac
+}
+
+func (ac *AccessControl) Deny(entity *Entity, resource *Resource, permission Permission) *AccessControl {
+	entity.AddPerm(permission, resource, false)
+	return ac
+}
+
+func (ac *AccessControl) AddEntities(entities ...*Entity) {
+	ac.Entities = append(ac.Entities, entities...)
+}
+
+func (ac *AccessControl) AddResources(resources ...*Resource) {
+	ac.Resources = append(ac.Resources, resources...)
+}
+
+// Ověření oprávnění entity na konkrétní resource
+func (ac *AccessControl) HasPermission(entity *Entity, resource *Resource, permission Permission) bool {
+
+	for _, owner := range resource.Owners {
+		if owner == entity {
 			return true
 		}
 	}
 
-	if sectionPerms, exists := ac.sections[section]; exists {
-		if sectionPerms.Permissions.Permissions[permission] {
+	// 1. Pokud má entita explicitně dané oprávnění, použijeme ho
+	if perms, exists := entity.Permission[permission]; exists {
+		if val, ok := perms[resource]; ok {
+			return val
+		}
+	}
+
+	// 2. Pokud má `ALL` oprávnění, vracíme true
+	if perms, exists := entity.Permission[All]; exists {
+		if val, ok := perms[resource]; ok && val {
+			return true
+		}
+	}
+
+	// 3. Procházíme všechny rodičovské entity (skupiny, nadřazené skupiny)
+	for _, parent := range entity.Parents {
+		if ac.HasPermission(parent, resource, permission) {
+			return true
+		}
+	}
+
+	// Kontrola parents od resource
+	if resource.Parent != nil {
+		if ac.HasPermission(entity, resource.Parent, permission) {
 			return true
 		}
 	}
@@ -124,18 +93,18 @@ func (ac *AccessControl) Can(userName, section string, permission Permission) bo
 	return false
 }
 
-func (ac *AccessControl) CanCreate(userName, section string) bool {
-	return ac.Can(userName, section, Create)
+func (ac *AccessControl) CanCreate(entity *Entity, resource *Resource) bool {
+	return ac.HasPermission(entity, resource, Create)
 }
 
-func (ac *AccessControl) CanRead(userName, section string) bool {
-	return ac.Can(userName, section, Read)
+func (ac *AccessControl) CanRead(entity *Entity, resource *Resource) bool {
+	return ac.HasPermission(entity, resource, Read)
 }
 
-func (ac *AccessControl) CanUpdate(userName, section string) bool {
-	return ac.Can(userName, section, Update)
+func (ac *AccessControl) CanUpdate(entity *Entity, resource *Resource) bool {
+	return ac.HasPermission(entity, resource, Update)
 }
 
-func (ac *AccessControl) CanDelete(userName, section string) bool {
-	return ac.Can(userName, section, Delete)
+func (ac *AccessControl) CanDelete(entity *Entity, resource *Resource) bool {
+	return ac.HasPermission(entity, resource, Delete)
 }
