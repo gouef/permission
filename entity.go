@@ -11,6 +11,11 @@ type Entity struct {
 }
 
 // NewEntity creates a new entity with default permission sets.
+//
+// Example:
+//
+//	user := permission.NewEntity("user1")
+//	fmt.Println(user.ID) // Output: user1
 func NewEntity(id string) *Entity {
 	perms := make(map[Permission]map[*Resource]bool)
 	perms[All] = make(map[*Resource]bool)
@@ -28,6 +33,12 @@ func NewEntity(id string) *Entity {
 }
 
 // CreateChild creates a child entity and assigns it as a descendant.
+//
+// Example:
+//
+//	parent := permission.NewEntity("admin")
+//	child := parent.CreateChild("user")
+//	fmt.Println(child.ID) // Output: user
 func (e *Entity) CreateChild(id string) *Entity {
 	child := NewEntity(id)
 	e.AddChildren(child)
@@ -36,6 +47,12 @@ func (e *Entity) CreateChild(id string) *Entity {
 }
 
 // AddChildren associates child entities with the current entity.
+//
+// Example:
+//
+//	admin := permission.NewEntity("admin")
+//	user := permission.NewEntity("user")
+//	admin.AddChildren(user)
 func (e *Entity) AddChildren(children ...*Entity) {
 	e.Children = append(e.Children, children...)
 	for _, child := range children {
@@ -46,6 +63,12 @@ func (e *Entity) AddChildren(children ...*Entity) {
 }
 
 // AddParents associates parent entities with the current entity.
+//
+// Example:
+//
+//	admin := permission.NewEntity("admin")
+//	user := permission.NewEntity("user")
+//	user.AddParents(admin)
 func (e *Entity) AddParents(parents ...*Entity) {
 	e.Parents = append(e.Parents, parents...)
 	for _, parent := range parents {
@@ -56,6 +79,12 @@ func (e *Entity) AddParents(parents ...*Entity) {
 }
 
 // Allow grants specified permissions for a resource to the entity.
+//
+// Example:
+//
+//	user := permission.NewEntity("user")
+//	res := permission.NewResource("file")
+//	user.Allow(res, permission.Read, permission.Write)
 func (e *Entity) Allow(resource *Resource, permissions ...Permission) {
 	for _, permission := range permissions {
 		e.AddPerm(permission, resource, true)
@@ -63,6 +92,12 @@ func (e *Entity) Allow(resource *Resource, permissions ...Permission) {
 }
 
 // Deny revokes specified permissions for a resource from the entity.
+//
+// Example:
+//
+//	user := permission.NewEntity("user")
+//	res := permission.NewResource("file")
+//	user.Deny(res, permission.Read, permission.Write)
 func (e *Entity) Deny(resource *Resource, permissions ...Permission) {
 	for _, permission := range permissions {
 		e.AddPerm(permission, resource, false)

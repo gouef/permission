@@ -9,6 +9,11 @@ type Resource struct {
 }
 
 // NewResource initializes a new resource with the given ID.
+//
+// Example:
+//
+//	doc := permission.NewResource("document")
+//	fmt.Println(doc.ID) // Output: document
 func NewResource(id string) *Resource {
 	return &Resource{
 		ID:           id,
@@ -18,6 +23,12 @@ func NewResource(id string) *Resource {
 }
 
 // CreateSub generates a new sub-resource under the current resource.
+//
+// Example:
+//
+//	website := permission.NewResource("website")
+//	news := website.CreateSub("news")
+//	fmt.Println(news.ID) // Output: news
 func (r *Resource) CreateSub(id string) *Resource {
 	sub := NewResource(id)
 
@@ -27,11 +38,22 @@ func (r *Resource) CreateSub(id string) *Resource {
 }
 
 // GetSub retrieves a sub-resource by its ID.
+//
+// Example:
+//
+//	website := permission.NewResource("website")
+//	news := website.CreateSub("news")
+//	fmt.Println(website.GetSub("news").ID) // Output: news
 func (r *Resource) GetSub(id string) *Resource {
 	return r.SubResources[id]
 }
 
 // CreateSubs generates multiple sub-resources.
+//
+// Example:
+//
+//	website := permission.NewResource("website")
+//	website.CreateSub("news", "comments", "reviews")
 func (r *Resource) CreateSubs(ids ...string) *Resource {
 	for _, id := range ids {
 		r.CreateSub(id)
@@ -50,6 +72,12 @@ func (r *Resource) AddSubs(resources ...*Resource) *Resource {
 }
 
 // AddOwners assigns ownership of the resource to specific entities.
+//
+// Example:
+//
+//	user := permission.NewEntity("user")
+//	doc := permission.NewResource("document")
+//	doc.AddOwners(user)
 func (r *Resource) AddOwners(owners ...*Entity) *Resource {
 	r.Owners = append(r.Owners, owners...)
 	return r
